@@ -18,15 +18,16 @@ class PointList {
     Node head;  // head of list 
 
 
-    private void removeNext(Node P) {
-        P.next = P.next.next;
+    public void remove(Node P) {
+        P.prev = P.next;
     }
 
 }
 class Node { 
     Point2d data; 
     Node next; 
-    Node(Point2d d)  { data = d;  next=null; } 
+    Node prev;
+    Node(Point2d d)  { data = d;  next=null; prev=null;} 
 
     public boolean hasNext() {
         if(next != null) {
@@ -48,6 +49,7 @@ public class HullBuilder{
         Node curr = list.head;
         for(int i = 1; i < array.size(); i++) {
             curr.next = new Node(array.get(i));
+            curr.next.prev = curr;
             curr = curr.next;
         }
         return list;
@@ -75,13 +77,32 @@ public class HullBuilder{
             prev = curr;
             curr = curr.next;
         }
-        curr.next = toInsert;
+        if(curr.data.x > P.x) {
+            prev.next = toInsert;
+            toInsert.next = curr;
+        } else {
+            curr.next = toInsert;
+        }
         return;
     }
 
-    private ArrayList<Point2d> reassembleHull(LinkedList<Point2d> hull) {
+    private ArrayList<Point2d> reassembleHull(PointList hull, int mode) {
+        Node prev = hull.head;
+        Node curr = prev.next;
+        ArrayList<Point2d> newHull = new ArrayList<Point2d>();
 
-        return null;
+        while(curr.hasNext()) {
+            int chir = Point2d.chirality(prev.data, curr.data, curr.next.data);
+            if(mode == chir) {
+                newHull.add(curr.next.data);
+            } else {
+                curr = curr.prev;
+                hull.remove(curr.next);
+                continue; 
+            }
+            curr = curr.next;
+        }
+        return newHull;
     }
 
     /* addPoint(P)
@@ -113,6 +134,9 @@ public class HullBuilder{
         PointList newUpper = arrayToList(upperHull);
         PointList newLower = arrayToList(lowerHull);
 
+        upperHull = reassembleHull(newUpper, 1);
+        lowerHull = reassembleHull(newLower, -1);
+
     }
 
     /* getHull()
@@ -126,7 +150,6 @@ public class HullBuilder{
 
         for(int i = 0; i < upperHull.size(); i++) {
             finalHull.add(upperHull.get(i));
-
         }
         //Now add lower hull, excluding the first and last point becasue they were already included from the upper hull
         for(int j = lowerHull.size() - 2; j > 0; j--) {
