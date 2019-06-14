@@ -17,12 +17,42 @@ import java.util.Iterator;
 class PointList {
     Node head;  // head of list 
 
-
     public void remove(Node P) {
-        P.prev = P.next;
+        if(P == head) {
+            head = head.next;
+            head.prev = null;
+        } else if(P.next == null) {
+            P.prev.next = null;
+        } else {
+            P.prev.next = P.next;
+            P.next.prev = P.prev;
+        }
     }
 
+    public void insert(Node curr, Node P) {
+        curr.next = P;
+        P.prev = curr;
+    }
+
+    public void print() {
+        System.out.println("----------\nPrinting Hull\n-------------");
+        int length = 1;
+        Node curr = head;
+        while(curr.hasNext()) {
+            if(curr == head) {
+                System.out.println("Curr: " + curr.data + " Next: " + curr.next.data);
+            } else {
+                System.out.println("Prev: " + curr.prev.data + " Curr: " + curr.data + " Next: " + curr.next.data);
+            }
+            curr = curr.next;
+            length++;
+        }
+        System.out.println("Prev: " + curr.prev.data + " Curr: " + curr.data);
+        System.out.println("Length " + length + "\n");
+
+    }
 }
+
 class Node { 
     Point2d data; 
     Node next; 
@@ -40,7 +70,7 @@ class Node {
 
 public class HullBuilder{
 
-    private ArrayList<Point2d> upperHull = new ArrayList<Point2d>();
+    public ArrayList<Point2d> upperHull = new ArrayList<Point2d>();
     private ArrayList<Point2d> lowerHull = new ArrayList<Point2d>();
 
     private PointList arrayToList(ArrayList<Point2d> array) {
@@ -69,8 +99,7 @@ public class HullBuilder{
                     list.head = toInsert;
                     toInsert.next = curr;
                 } else {
-                    prev.next = toInsert;
-                    toInsert.next = curr;
+                    list.insert(curr.prev, toInsert);
                 }
                 return;
             }
@@ -78,10 +107,9 @@ public class HullBuilder{
             curr = curr.next;
         }
         if(curr.data.x > P.x) {
-            prev.next = toInsert;
-            toInsert.next = curr;
+            list.insert(curr.prev, toInsert);
         } else {
-            curr.next = toInsert;
+            list.insert(curr, toInsert);
         }
         return;
     }
@@ -91,15 +119,18 @@ public class HullBuilder{
         Node curr = prev.next;
         ArrayList<Point2d> newHull = new ArrayList<Point2d>();
 
+        hull.print();
+
         while(curr.hasNext()) {
             int chir = Point2d.chirality(prev.data, curr.data, curr.next.data);
             if(mode == chir) {
                 newHull.add(curr.next.data);
             } else {
-                curr = curr.prev;
-                hull.remove(curr.next);
+                curr = curr.next;
+                hull.remove(curr.prev);
                 continue; 
             }
+            prev = curr;
             curr = curr.next;
         }
         return newHull;
@@ -129,12 +160,14 @@ public class HullBuilder{
             return; //If P is already in list, don't add anything
         } //This is all constant time because it will deal with at most 2 elements.
 
-
         //Create new linked lists to copy arrays into (for fast deletion time) and add P in sorted order
         PointList newUpper = arrayToList(upperHull);
         PointList newLower = arrayToList(lowerHull);
-
-        upperHull = reassembleHull(newUpper, 1);
+        
+        addToMiddle(newUpper, P);
+        addToMiddle(newLower, P);
+        
+        upperHull = reassembleHull(newUpper,  1);
         lowerHull = reassembleHull(newLower, -1);
 
     }
@@ -172,7 +205,7 @@ public class HullBuilder{
         Point2d p1 = new Point2d(1,2);
         Point2d p2 = new Point2d(3,2);
         Point2d p3 = new Point2d(4,2);
-        Point2d p4 = new Point2d(2,2);
+        Point2d p4 = new Point2d(2,3);
         Point2d p0 = new Point2d(0,2);
         Point2d p5 = new Point2d(8,2);
 
@@ -181,18 +214,22 @@ public class HullBuilder{
         test.add(p2);
         test.add(p3);
 
-        System.out.println("Test:" + test);
-
         PointList list = hb.arrayToList(test);
         hb.addToMiddle(list, p4);
         hb.addToMiddle(list, p0);
         hb.addToMiddle(list, p5);
-        while((list.head).hasNext()) {
-            System.out.println(list.head.data);
-            list.head = list.head.next;
-        }
-        System.out.println(list.head.data);
         
+        HullBuilder hb2  = new HullBuilder();
+        hb2.addPoint(p1);
+        hb2.addPoint(p4);
+        hb2.addPoint(p2);
+        
+        for(int i = 0; i < hb2.upperHull.size(); i++) {
+            System.out.println("UpperHull Point: " + hb2.upperHull.get(i));
+        }
+        for(int i = 0; i < hb2.lowerHull.size(); i++) {
+            System.out.println("LowerHull Point: " + hb2.lowerHull.get(i));
+        }
     }
 }
 
