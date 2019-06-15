@@ -57,7 +57,7 @@ class Node {
     Point2d data; 
     Node next; 
     Node prev;
-    Node(Point2d d)  { data = d;  next=null; prev=null;} 
+    Node(Point2d d) { data = d;  next=null; prev=null;}
 
     public boolean hasNext() {
         if(next != null) {
@@ -70,7 +70,7 @@ class Node {
 
 public class HullBuilder{
 
-    public ArrayList<Point2d> upperHull = new ArrayList<Point2d>();
+    private ArrayList<Point2d> upperHull = new ArrayList<Point2d>();
     private ArrayList<Point2d> lowerHull = new ArrayList<Point2d>();
 
     private PointList arrayToList(ArrayList<Point2d> array) {
@@ -91,7 +91,7 @@ public class HullBuilder{
         Node prev = curr;
         Node toInsert = new Node(P);
         while(curr.hasNext()) {
-            if(curr.data.x == P.x && curr.data.y == P.y){
+            if(curr.data.x == P.x && curr.data.y == P.y) {
                 return;
             } //Duplicate points should not be added
             if(P.x < curr.data.x) {
@@ -111,28 +111,31 @@ public class HullBuilder{
         } else {
             list.insert(curr, toInsert);
         }
-        return;
     }
 
     private ArrayList<Point2d> reassembleHull(PointList hull, int mode) {
         Node prev = hull.head;
         Node curr = prev.next;
-        ArrayList<Point2d> newHull = new ArrayList<Point2d>();
-
-        hull.print();
 
         while(curr.hasNext()) {
             int chir = Point2d.chirality(prev.data, curr.data, curr.next.data);
-            if(mode == chir) {
-                newHull.add(curr.next.data);
-            } else {
+                if (mode != chir) {
+                    curr = curr.next;
+                    hull.remove(curr.prev);
+                    continue;
+                }
+                prev = curr;
                 curr = curr.next;
-                hull.remove(curr.prev);
-                continue; 
-            }
-            prev = curr;
+
+        }
+        ArrayList<Point2d> newHull = new ArrayList<Point2d>();
+        curr = hull.head;
+        while(curr.next != null) {
+            newHull.add(curr.data);
             curr = curr.next;
         }
+        newHull.add(curr.data);
+
         return newHull;
     }
 
@@ -219,17 +222,12 @@ public class HullBuilder{
         hb.addToMiddle(list, p0);
         hb.addToMiddle(list, p5);
         
-        HullBuilder hb2  = new HullBuilder();
+        HullBuilder hb2 = new HullBuilder();
         hb2.addPoint(p1);
-        hb2.addPoint(p4);
         hb2.addPoint(p2);
-        
-        for(int i = 0; i < hb2.upperHull.size(); i++) {
-            System.out.println("UpperHull Point: " + hb2.upperHull.get(i));
-        }
-        for(int i = 0; i < hb2.lowerHull.size(); i++) {
-            System.out.println("LowerHull Point: " + hb2.lowerHull.get(i));
-        }
+        hb2.addPoint(p4);
+
+        System.out.println("Here is the hull: " + hb2.getHull());
     }
 }
 

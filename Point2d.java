@@ -92,4 +92,14 @@ public class Point2d {
     public double length(){
         return Math.sqrt(x*x + y*y);
     }
+
+    public int compareTo(Point2d P) {
+        if(x < P.x) return -1;
+        if(x > P.x) return  1;
+        return 0;
+    }
+
+    public String toString() {
+        return "(" + x + "," + y + ")";
+    }
 }
