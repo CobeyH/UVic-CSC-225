@@ -5,19 +5,22 @@
    of any of the methods below (you may add other methods as needed).
 
    B. Bird - 03/18/2019
-   (Add your name/studentID/date here)
+   Cobey Hollier/ V00893715/ June 13th 2019
    */
 
 import java.util.LinkedList;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Collections;
+import java.util.Comparator;
 //---------------------------------//
 // My Own Linked List implementation
 // --------------------------------//
 class PointList {
     Node head;  // head of list 
+    int size = 1;
 
     public void remove(Node P) {
+        size--;
         if(P == head) {
             head = head.next;
             head.prev = null;
@@ -30,6 +33,7 @@ class PointList {
     }
 
     public void insert(Node prev, Node P, Node next) {
+        size++;
         if(prev != null) {
             prev.next = P;
             P.prev = prev;
@@ -89,6 +93,7 @@ public class HullBuilder{
             curr.next.prev = curr;
             curr = curr.next;
         }
+        list.size = array.size();
         return list;
     }
 
@@ -140,7 +145,7 @@ public class HullBuilder{
             hull.remove(prev.next);
         }
 
-        ArrayList<Point2d> newHull = new ArrayList<Point2d>();
+        ArrayList<Point2d> newHull = new ArrayList<Point2d>(hull.size);
         curr = hull.head;
         while(curr.next != null) {
             newHull.add(curr.data);
@@ -168,9 +173,14 @@ public class HullBuilder{
                 lowerHull.add(lowerHull.get(0));
                 upperHull.set(0, P);
                 lowerHull.set(0, P);
-            } else if(P.x > upperHull.get(0).x) { //If P is the the right, just add it to the end
+            } else if(P.x > upperHull.get(0).x || P.x > upperHull.get(0).y) { //If P is the the right, just add it to the end
                 upperHull.add(P);
                 lowerHull.add(P);
+            } else if (P.y < upperHull.get(0).y) { //If x coord is the same then we must sort by y coord
+                upperHull.add(upperHull.get(0));
+                lowerHull.add(lowerHull.get(0));
+                upperHull.set(0, P);
+                lowerHull.set(0, P);
             }
             return; //If P is already in list, don't add anything
         } //This is all constant time because it will deal with at most 2 elements.
@@ -212,31 +222,53 @@ public class HullBuilder{
        current point set). Return false otherwise.
        */
     public boolean isInsideHull(Point2d P) {
-        return false;
+        Comparator<Point2d> comp = new Comparator<Point2d>() { 
+            public int compare(Point2d P1, Point2d P2) { 
+                return P1.compareTo(P2);
+            } 
+        }; 
+
+        int i = Collections.binarySearch(upperHull, P, comp);
+        int j = Collections.binarySearch(lowerHull, P, comp);
+
+        if(i == -1 || i == -(upperHull.size() + 1)) {
+            return false; //This means that the element is either to the left of the leftmost point or the right of the rightmost point
+        } else if(i >= 0 || j >= 0) {
+            return true; //This means that it found the point in a hull
+        }
+        if(Point2d.chirality(upperHull.get(-i - 2), upperHull.get(-i - 1), P) == - 1) {
+            return false; //this means it is above to upperHull
+        } else if(Point2d.chirality(lowerHull.get(-j - 2), lowerHull.get(-j - 1), P) == 1) {
+            return false; //This means it is below the lower hull
+        }
+        return true; //If it is not above the upper hull, below the lower hull, to left of the leftmost point or the right of the rightmost point, it must be inside the hull.
     }
 
     public static void main(String args[]) {
         HullBuilder hb = new HullBuilder();
-        Point2d p1 = new Point2d(-1,-1);
-        Point2d p2 = new Point2d(1,1);
-        Point2d p3 = new Point2d(0,0);
-        Point2d p4 = new Point2d(-1,1);
-        Point2d p5 = new Point2d(1,-1);
-        Point2d p6 = new Point2d(0.5,0.5);
-        Point2d p7 = new Point2d(-10,-10);
-        Point2d p8 = new Point2d(10,10);
+        Point2d p1 = new Point2d(0,-100);
+        Point2d p2 = new Point2d(0,100);
+        Point2d p7 = new Point2d(50,-50);
+        Point2d p8 = new Point2d(50,50);
+        Point2d p9 = new Point2d(-50,-50);
+        Point2d p10 = new Point2d(-50,50);
+        Point2d p11 = new Point2d(0,0);
+        Point2d p12 = new Point2d(10,10);
+        Point2d p13 = new Point2d(-40,-10);
 
         HullBuilder hb2 = new HullBuilder();
         hb2.addPoint(p1);
         hb2.addPoint(p2);
-        hb2.addPoint(p3);
-        hb2.addPoint(p4);
-        hb2.addPoint(p5);
-        hb2.addPoint(p6);
         hb2.addPoint(p7);
         hb2.addPoint(p8);
-        
+        hb2.addPoint(p9);
+        hb2.addPoint(p10);
+        hb2.addPoint(p11);
+        hb2.addPoint(p12);
+        hb2.addPoint(p13);
+
         System.out.println("Here is the hull: " + hb2.getHull());
+
     }
 }
 
