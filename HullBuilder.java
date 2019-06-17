@@ -233,8 +233,18 @@ public class HullBuilder{
 
         if(i == -1 || i == -(upperHull.size() + 1)) {
             return false; //This means that the element is either to the left of the leftmost point or the right of the rightmost point
-        } else if(i >= 0 || j >= 0) {
-            return true; //This means that it found the point in a hull
+        } else if(i >= 0) { //this means it found a point with the same x coord as a point in the hull.
+            if(upperHull.get(i) == P) {
+                return true; //Check if the point is at that index
+            } else {
+                return false; //If not then it isn't in the hull
+            }
+        } else if(j >= 0) {
+            if(lowerHull.get(j) == P) {
+                return true;
+            } else {
+                return false;
+            }
         }
         if(Point2d.chirality(upperHull.get(-i - 2), upperHull.get(-i - 1), P) == - 1) {
             return false; //this means it is above to upperHull
